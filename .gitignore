@@ -12,3 +12,5 @@ restaurant_review/.env
 __pycache__
 db.sqlite3
 media
+
+api.http

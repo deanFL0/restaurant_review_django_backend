@@ -23,11 +23,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(choices=Role, default=Role.USER)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=timezone.now)
+    updated_at = models.DateTimeField(auto_now=timezone.now)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     objects = UserManager()
 
@@ -36,6 +36,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     @property
     def total_reviews(self):
+        """
+        Calculates total reviews made by user.
+        Returns:
+            int: Total reviews made by user.
+        """
         return self.reviews.count()
     
 class Restaurant(models.Model):
@@ -48,8 +53,21 @@ class Restaurant(models.Model):
 
     @property
     def total_rating(self):
-        rating = self.reviews.aggregate(avg_rating=Avg('rating')['avg_rating'])
+        """
+        Calculates the average rating for the restaurant based on all reviews.
+        Returns:
+            float: The average rating rounded to one decimal place, or 0 if no ratings exist.
+        """
+        rating = self.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
         return round(rating,1) if rating else 0
+    
+    @total_rating.setter
+    def set_bar(self, obj):
+        if not isinstance(obj, function):
+            raise TypeError(
+                f"obj must be a function, not {obj.__class__.__name__}"
+            )
+        self.total_rating = obj
     
     @property
     def total_reviews(self):
@@ -59,7 +77,7 @@ class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
     rating = models.IntegerField() #1-5
     review = models.TextField()
-    created_at = models.DateField(auto_now=timezone.now)
+    created_at = models.DateField(auto_now_add=timezone.now)
     updated_at = models.DateField(auto_now=timezone.now)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
@@ -71,4 +89,19 @@ class Review(models.Model):
     
     @property
     def time_since_posted(self):
+        """
+        Returns the time elapsed since the review was created.
+        Returns:
+            str: A human-readable time difference (e.g., "2 days ago").
+        """
         return timesince(self.created_at)
+    
+    @property
+    def is_edited(self):
+        """
+        Checks if the review has been edited.
+
+        Returns:
+            bool: True if the review has been updated after creation, False otherwise.
+        """
+        return self.created_at != self.updated_at

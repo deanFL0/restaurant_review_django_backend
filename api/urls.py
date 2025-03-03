@@ -1,6 +1,10 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from . import views
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    
-]
+restaurant_route = DefaultRouter()
+restaurant_route.register('restaurant', views.RestaurantViewSet)
+
+urlpatterns = []
+
+urlpatterns += restaurant_route.urls
