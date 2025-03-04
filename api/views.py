@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -29,20 +30,6 @@ class RestaurantViewSet(viewsets.ModelViewSet):
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
-    
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Override retrieve to include all reviews associated with the restaurant.
-        """
-        instance = self.get_object()
-        reviews = Review.objects.filter(restaurant=instance)
-
-        serializer = self.get_serializer(instance)
-        data = serializer.data
-
-        data['reviews'] = ReviewSerializer(reviews, many=True).data
-
-        return Response(data, status=status.HTTP_200_OK)
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
@@ -87,3 +74,27 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user, restaurant=restaurant)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+class RestaurantReviewViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ReviewSerializer
+
+    # Filter
+    filterset_class = ReviewFilter
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    ordering_fields = ['rating', 'created_at']
+
+    #Pagination
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 25
+    pagination_class.max_page_size = 100
+
+    def get_queryset(self):
+        """Retrieve only reviews for selected restaurant"""
+
+        restaurant_id = self.kwargs.get('restaurant_pk')
+        instance = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
+        queryset = Review.objects.filter(restaurant=instance)
+
+        return queryset
+    
+
