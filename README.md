@@ -39,19 +39,86 @@ python manage.py runserver
 | Method | Endpoint | Description |
 | --- | --- | --- |
 | GET | `/api/restaurants/` | List all restaurants |
-| GET | `/api/restaurants/{id}/` | Get a single restaurant |
+| GET | `/api/restaurants/{restuarant_id}/` | Get a single restaurant |
 | POST | `/api/restaurants/` | Create a restaurant (admin) |
-| PUT | `/api/restaurants/{id}/` | Update a restaurant (admin) |
-| DELETE | `/api/restaurants/{id}/` | Delete a restaurant (admin) |
+| PATCH | `/api/restaurants/{restuarant_id}/` | Partial update a restaurant (admin) |
+| PUT | `/api/restaurants/{restuarant_id}/` | Update a restaurant (admin) |
+| DELETE | `/api/restaurants/{restuarant_id}/` | Delete a restaurant (admin) |
 
 ### ⭐ **Review Endpoints**
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| GET | `/api/restaurants/{id}/reviews/` | List reviews for a restaurant |
+| GET | `/api/reviews/` | List all reviews |
+| GET | `/api/reviews/{reveiw_id}` | Get a single review |
 | POST | `/api/reviews/` | Submit a review (authenticated) |
-| PUT | `/api/reviews/{id}/` | Edit own review (authenticated owner) |
-| DELETE | `/api/reviews/{id}/` | Delete own review or admin (authenticated owner or admin) |
+| PATCH | `/api/reviews/{reveiw_id}/` | Partial update own review (authenticated owner) |
+| DELETE | `/api/reviews/{reveiw_id}/` | Delete own review or admin (authenticated owner or admin) |
+
+--------------------
+## Filtering, Sorting, and Pagination in the API
+
+### Filtering
+
+This API supports filtering using `django-filter`. The available filters for each endpoint are:
+
+#### Restaurant Filters
+You can filter restaurants by:
+- `name` (case-insensitive partial match or exact match)
+
+Example usage:
+```
+GET /api/restaurants/?name__icontains=mcdonalds
+GET /api/restaurants/?name__iexact=McDonald's
+```
+
+#### Review Filters
+You can filter reviews by:
+- `rating` (greater than or equal to, less than or equal to)
+- `restaurant` (exact match)
+- `created_at` (greater than or equal to, less than or equal to)
+- `user` (exact match)
+
+Example usage:
+```
+GET /api/reviews/?rating__gte=4
+GET /api/reviews/?rating__lte=3
+GET /api/reviews/?restaurant=5
+GET /api/reviews/?created_at__gte=2024-01-01
+GET /api/reviews/?user=10
+```
+
+### Sorting
+
+You can sort results using the `ordering` query parameter.
+
+#### Sorting Restaurants
+You can sort restaurants by `name` (ascending or descending):
+```
+GET /api/restaurants/?ordering=name   # Ascending order (A-Z)
+GET /api/restaurants/?ordering=-name  # Descending order (Z-A)
+```
+
+#### Sorting Reviews
+You can sort reviews by `rating` or `created_at`:
+```
+GET /api/reviews/?ordering=rating        # Sort by rating (low to high)
+GET /api/reviews/?ordering=-rating       # Sort by rating (high to low)
+GET /api/reviews/?ordering=created_at    # Sort by oldest first
+GET /api/reviews/?ordering=-created_at   # Sort by newest first
+```
+
+### Pagination
+
+Pagination is enabled using Django REST Framework’s `LimitOffsetPagination`. The default settings are:
+- `default_limit = 25` (25 results per page)
+- `max_limit = 100` (Maximum 100 results per page)
+
+To use pagination, use the `limit` to set number of result to show and `offset` to navigate thorugh pages, example:
+```
+GET /api/restaurants/?limit=25&offset=100
+GET /api/reviews/?limit=25&offset=125
+```
 
 --------------------
 

@@ -1,9 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.exceptions import MethodNotAllowed, NotFound, ValidationError
 
 from .filters import RestaurantFilter, ReviewFilter
 from .models import Restaurant, Review
@@ -21,9 +22,9 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name']
 
     # Pagination
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 25
-    pagination_class.max_page_size = 100
+    pagination_class = LimitOffsetPagination
+    pagination_class.default_limit = 25
+    pagination_class.max_limit = 100
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
@@ -41,15 +42,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
     ordering_fields = ['rating', 'created_at']
 
     #Pagination
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 25
-    pagination_class.max_page_size = 100
+    pagination_class = LimitOffsetPagination
+    pagination_class.default_limit = 25
+    pagination_class.max_limit = 100
 
     def get_permissions(self):
         self.permission_classes = [AllowAny]
-        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+        if self.request.method in ['POST', 'PATCH', 'DELETE']:
             self.permission_classes = [IsOwnerOrAdmin]
         return super().get_permissions()
+    
+    def put(self, request, *args, **kwargs):
+        """
+        Don't allow PUT requests.
+        """
+        raise MethodNotAllowed("PUT")
 
     def create(self, request, *args, **kwargs):
         """
@@ -62,11 +69,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         try:
             restaurant = Restaurant.objects.get(restaurant_id=restaurant_id)
         except Restaurant.DoesNotExist:
-            return Response({"error": "Restaurant not found."}, status=status.HTTP_404_NOT_FOUND)
-
+            raise NotFound("Restaurant does not exist.")
         # Check if the user already reviewed this restaurant
         if Review.objects.filter(user=request.user, restaurant=restaurant).exists():
-            return Response({"error": "You have already reviewed this restaurant."}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("You have already reviewed this restaurant.")
 
         # Save the review
         serializer = self.get_serializer(data=request.data)
