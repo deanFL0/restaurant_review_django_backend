@@ -10,29 +10,30 @@ from .managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    class Role(models.TextChoices):
-        USER = 'user'
-        ADMIN = 'admin'
-        SUPER_ADMIN = 'super_admin'
     user_id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(unique=True, default=uuid.uuid4)
     first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50, blank=True, null=True)
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(unique=True)
-    role = models.CharField(choices=Role, default=Role.USER)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=timezone.now)
-    updated_at = models.DateTimeField(auto_now=timezone.now)
+    is_superuser = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['email', 'first_name']
 
     objects = UserManager()
 
     def __str__(self):
-        return f"{self.username} ({self.role})"
+        return f"{self.username} | {self.email}"
+    
+    @property
+    def full_name(self):
+        return " ".join(filter(None, [self.first_name, self.last_name]))
     
     @property
     def total_reviews(self):
@@ -48,8 +49,10 @@ class Restaurant(models.Model):
     name = models.CharField(max_length=200)
     image = models.ImageField(upload_to='restaurant_images/')
     description = models.TextField()
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    address = models.CharField(max_length=200)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    webiste = models.CharField(max_length=200, blank=True, null=True)
 
     @property
     def total_rating(self):

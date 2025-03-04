@@ -23,8 +23,10 @@ class RestaurantSerializer(serializers.ModelSerializer):
             'name',
             'image',
             'description',
+            'address',
             'latitude',
             'longitude',
+            'website',
             'total_rating',
             'total_reviews',
         )
