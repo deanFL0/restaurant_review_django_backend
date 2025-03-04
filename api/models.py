@@ -52,7 +52,7 @@ class Restaurant(models.Model):
     address = models.CharField(max_length=200)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
-    webiste = models.CharField(max_length=200, blank=True, null=True)
+    website = models.CharField(max_length=200, blank=True, null=True)
 
     @property
     def total_rating(self):
