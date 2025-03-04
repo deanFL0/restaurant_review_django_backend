@@ -34,7 +34,6 @@ class RestaurantViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated , IsOwnerOrAdmin]
 
     # Filter
     filterset_class = ReviewFilter
@@ -46,11 +45,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class.page_size = 25
     pagination_class.max_page_size = 100
 
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if not self.request.user.is_superuser:
-            qs = qs.filter(user=self.request.user)
-        return qs
+    def get_permissions(self):
+        self.permission_classes = [AllowAny]
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            self.permission_classes = [IsOwnerOrAdmin]
+        return super().get_permissions()
 
     def create(self, request, *args, **kwargs):
         """
@@ -74,28 +73,3 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user, restaurant=restaurant)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-class RestaurantReviewViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = ReviewSerializer
-    permission_classes = [AllowAny]
-
-    # Filter
-    filterset_class = ReviewFilter
-    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
-    ordering_fields = ['rating', 'created_at']
-
-    #Pagination
-    pagination_class = PageNumberPagination
-    pagination_class.page_size = 25
-    pagination_class.max_page_size = 100
-
-    def get_queryset(self):
-        """Retrieve only reviews for selected restaurant"""
-
-        restaurant_id = self.kwargs.get('restaurant_pk')
-        instance = get_object_or_404(Restaurant, restaurant_id=restaurant_id)
-        queryset = Review.objects.filter(restaurant=instance)
-
-        return queryset
-    
-

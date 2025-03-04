@@ -23,4 +23,7 @@ class ReviewFilter(django_filters.FilterSet):
         model = Review
         fields = {
             'rating': ['gte', 'lte'],
+            'restaurant': ['exact'],
+            'created_at': ['gte', 'lte'],
+            'user': ['exact'],
         }
