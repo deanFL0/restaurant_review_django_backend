@@ -39,18 +39,20 @@ class RestaurantSerializer(serializers.ModelSerializer):
         return obj.reviews.count()
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user_username = serializers.CharField()
-    time_since_posted = serializers.CharField()
+    user_username = serializers.ReadOnlyField()
+    time_since_posted = serializers.ReadOnlyField()
     class Meta:
         model = Review
         fields = (
             'rating',
             'review',
+            'user',
+            'restaurant',
             'user_username',
             'time_since_posted',
         )
-        read_only_fields = ('user_username', 'time_since_posted')  # Ensure these fields are read-only
-    
+        read_only_fields = ['user']
+
     def validate_rating(self, value):
         if value <= 0 or value > 5:
             raise serializers.ValidationError("Rating must be between one to five.")
