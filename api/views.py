@@ -2,7 +2,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .filters import RestaurantFilter, ReviewFilter
@@ -26,7 +26,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
     pagination_class.max_page_size = 100
 
     def get_permissions(self):
-        self.permission_classes = [IsAuthenticated]
+        self.permission_classes = [AllowAny]
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
             self.permission_classes = [IsAdminUser]
         return super().get_permissions()
@@ -77,6 +77,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     
 class RestaurantReviewViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = [AllowAny]
 
     # Filter
     filterset_class = ReviewFilter
