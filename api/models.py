@@ -3,7 +3,6 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.db.models import Avg
-from django.utils import timezone
 from django.utils.timesince import timesince
 
 from .managers import UserManager
@@ -80,8 +79,8 @@ class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
     rating = models.IntegerField() #1-5
     review = models.TextField()
-    created_at = models.DateField(auto_now_add=timezone.now)
-    updated_at = models.DateField(auto_now=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews')
