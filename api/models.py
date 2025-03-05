@@ -84,10 +84,6 @@ class Review(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews')
-
-    @property
-    def user_username(self):
-        return self.user.username
     
     @property
     def time_since_posted(self):

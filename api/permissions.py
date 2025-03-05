@@ -9,13 +9,9 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
-        # Allow read-only access to anyone
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Allow admin to delete any review
+        # Allow admin to delete any object
         if request.method == "DELETE" and request.user.is_staff:
             return True
         
-        # Allow the owner to update/delete their own review
-        return obj.user == request.user
+        # Allow the owner to update/delete their own object
+        return obj == request.user

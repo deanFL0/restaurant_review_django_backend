@@ -55,6 +55,17 @@ python manage.py runserver
 | PATCH | `/api/reviews/{reveiw_id}/` | Partial update own review (authenticated owner) |
 | DELETE | `/api/reviews/{reveiw_id}/` | Delete own review or admin (authenticated owner or admin) |
 
+### **User Endpoints**
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/api/users/register/` | Register a new user	Public |
+| POST | `/api/users/{username}/change_password/` | Change password	Owner only |
+| GET | `/api/users/` | List all users (admin) |
+| GET | `/api/users/{username}/` | Retrieve a user (authenticated owner or admin) |
+| PATCH | `/api/users/{username}/` | Partial update user details (authenticated owner) |
+| DELETE | `/api/users/{username}//` | Delete a user (authenticated owner) |
+
 --------------------
 ## Filtering, Sorting, and Pagination in the API
 

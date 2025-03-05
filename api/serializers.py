@@ -3,15 +3,43 @@ from .models import User, Restaurant, Review
 
 class UserSerializer(serializers.ModelSerializer):
     uuid = serializers.UUIDField(read_only=True)
+    total_reviews = serializers.ReadOnlyField()
+
     class Meta:
         model = User
         fields = (
             'uuid',
             'first_name',
             'last_name',
-            'username',
             'email',
+            'username',
+            'is_active',
+            'is_staff',
+            'total_reviews',
         )
+        read_only_fields = ('uuid', 'is_active', 'is_staff')
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'first_name',
+            'last_name',
+            'email',
+            'username',
+            'password',
+        )
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
 
 class RestaurantSerializer(serializers.ModelSerializer):
     total_rating = serializers.SerializerMethodField()
@@ -42,7 +70,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
         return obj.reviews.count()
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user_username = serializers.ReadOnlyField()
+    user_full_name = serializers.ReadOnlyField(source='user.full_name')
+    user_username = serializers.ReadOnlyField(source='user.username')
     time_since_posted = serializers.ReadOnlyField()
     class Meta:
         model = Review
@@ -50,9 +79,9 @@ class ReviewSerializer(serializers.ModelSerializer):
             'review_id',
             'rating',
             'review',
-            'user',
             'restaurant',
             'user_username',
+            'user_full_name',
             'time_since_posted',
         )
         read_only_fields = ['user']
